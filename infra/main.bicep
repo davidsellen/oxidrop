@@ -2,7 +2,10 @@ targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
 param appName string = 'oxidrop-dev'
-param containerImage string = 'ghcr.io/davidsellen/oxidrop:0.1.0'
+param containerImage string = 'ghcr.io/davidsellen/oxidrop:0.1.1'
+
+@secure()
+param ingestToken string
 
 resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: '${appName}-env'
@@ -26,11 +29,17 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       activeRevisionsMode: 'Single'
       ingress: {
-        external: false
+        external: true
         targetPort: 8080
         allowInsecure: false
         transport: 'auto'
       }
+      secrets: [
+      {
+        name: 'ingest-token'
+        value: ingestToken
+      }
+    ]
     }
     template: {
       containers: [
@@ -49,6 +58,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'RUST_LOG'
               value: 'info'
+            }
+            {
+              name: 'INGEST_TOKEN'
+              secretRef: 'ingest-token'
             }
           ]
         }
