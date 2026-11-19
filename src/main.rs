@@ -25,9 +25,14 @@ async fn main() -> std::io::Result<()> {
                 .on_response(DefaultOnResponse::new().level(Level::INFO)),
         );
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
+    let address = std::env::var("BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
 
-    tracing::info!(address = "127.0.0.1:8080", "Oxidrop started");
+    let listener = tokio::net::TcpListener::bind(&address).await?;
+
+    tracing::info!(
+        address = %address,
+        "Oxidrop started"
+    );
 
     axum::serve(listener, app).await
 }
