@@ -2,7 +2,7 @@ targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
 param appName string = 'oxidrop-dev'
-param containerImage string = 'ghcr.io/davidsellen/oxidrop:0.1.1'
+param containerImage string = 'ghcr.io/davidsellen/oxidrop:0.1.2'
 
 @secure()
 param ingestToken string
@@ -27,10 +27,16 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
     managedEnvironmentId: environment.id
     workloadProfileName: 'Consumption'
     configuration: {
-      activeRevisionsMode: 'Single'
+      activeRevisionsMode: 'Multiple'
       ingress: {
         external: true
         targetPort: 8080
+        traffic: [
+          {
+            revisionName: 'oxidrop-dev--v012'
+            weight: 100
+          }
+        ]
         allowInsecure: false
         transport: 'auto'
       }
@@ -76,6 +82,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           ]
         }
       ]
+      revisionSuffix: 'v012'
       scale: {
         minReplicas: 0
         maxReplicas: 1
