@@ -23,8 +23,10 @@ fi
 
 export OXIDROP_DEPLOY_TOKEN
 
+: "${OXIDROP_AZURE_SUBSCRIPTION:?Set OXIDROP_AZURE_SUBSCRIPTION in .env or export it before running this script.}"
+
 az deployment group "$action" \
-  --subscription e6010d5d-9573-4482-af10-46bb1978fc74 \
+  --subscription "$OXIDROP_AZURE_SUBSCRIPTION" \
   --resource-group rg-oxidrop-dev \
   --name oxidrop-app \
   --parameters infra/dev.bicepparam
