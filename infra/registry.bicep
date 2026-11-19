@@ -17,5 +17,5 @@ resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   }
 }
 
-output registryName string = registry.name
+output acrName string = registry.name
 output loginServer string = registry.properties.loginServer
