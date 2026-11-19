@@ -1,12 +1,11 @@
 use axum::{
-    Json, Router,
+    Router,
     routing::{get, post},
 };
-use serde::Deserialize;
-use serde_json::{Value, json};
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
+mod ingestion;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -18,7 +17,7 @@ async fn main() -> std::io::Result<()> {
 
     let app = Router::new()
         .route("/health", get(health))
-        .route("/ingest", post(ingest))
+        .route("/ingest", post(ingestion::ingest))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
@@ -35,23 +34,4 @@ async fn main() -> std::io::Result<()> {
 
 async fn health() -> &'static str {
     "Healthy"
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct IngestionRequest {
-    event_type: String,
-    order_id: u64,
-}
-
-async fn ingest(Json(payload): Json<IngestionRequest>) -> Json<Value> {
-    tracing::info!(
-        event_type = %payload.event_type,
-        order_id = payload.order_id,
-        "Ingestion payload received"
-    );
-
-    Json(json!({
-        "status": "received"
-    }))
 }
