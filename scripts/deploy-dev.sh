@@ -25,8 +25,24 @@ export OXIDROP_DEPLOY_TOKEN
 
 : "${OXIDROP_AZURE_SUBSCRIPTION:?Set OXIDROP_AZURE_SUBSCRIPTION in .env or export it before running this script.}"
 
-az deployment group "$action" \
-  --subscription "$OXIDROP_AZURE_SUBSCRIPTION" \
-  --resource-group rg-oxidrop-dev \
-  --name oxidrop-app \
+deployment_args=(
+  --subscription "$OXIDROP_AZURE_SUBSCRIPTION"
+  --resource-group rg-oxidrop-dev
+  --name oxidrop-app
   --parameters infra/dev.bicepparam
+)
+
+if [[ "$action" == create ]]; then
+  app_host=$(az deployment group create "${deployment_args[@]}" \
+    --query properties.outputs.appHost.value \
+    --output tsv)
+
+  if [[ -z "$app_host" ]]; then
+    echo "Deployment completed, but the appHost output is empty." >&2
+    exit 1
+  fi
+
+  printf 'Health URL: https://%s/health\n' "$app_host"
+else
+  az deployment group what-if "${deployment_args[@]}"
+fi
