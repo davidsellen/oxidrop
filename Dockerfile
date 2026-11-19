@@ -11,6 +11,8 @@ RUN cargo build --release --locked
 # Stage 2: Run the application
 FROM debian:bookworm-slim AS runtime
 
+LABEL org.opencontainers.image.source="https://github.com/davidsellen/oxidrop"
+
 WORKDIR /app
 
 COPY --from=build /app/target/release/oxidrop /app/oxidrop
