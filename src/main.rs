@@ -1,5 +1,5 @@
 use axum::{
-    Router, middleware,
+    Router, Json, middleware,
     routing::{get, post},
 };
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
@@ -28,6 +28,7 @@ async fn main() -> std::io::Result<()> {
 
     let app = Router::new()
         .route("/health", get(health))
+        .route("/version", get(version))
         .route(
             "/ingest",
             post(ingestion::ingest).layer(middleware::from_fn_with_state(
@@ -56,4 +57,11 @@ async fn main() -> std::io::Result<()> {
 
 async fn health() -> &'static str {
     "Healthy"
+}
+
+async fn version() -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "service": "oxidrop",
+        "version": env!("CARGO_PKG_VERSION")
+    }))
 }
