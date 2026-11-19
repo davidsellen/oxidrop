@@ -1,10 +1,11 @@
 use axum::{
-    Router,
+    Router, middleware,
     routing::{get, post},
 };
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
 use tracing::Level;
 use tracing_subscriber::EnvFilter;
+mod auth;
 mod ingestion;
 
 #[tokio::main]
@@ -15,9 +16,25 @@ async fn main() -> std::io::Result<()> {
         )
         .init();
 
+    let ingest_token = std::env::var("INGEST_TOKEN")
+        .ok()
+        .filter(|token| !token.trim().is_empty())
+        .ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "INGEST_TOKEN must be configured",
+            )
+        })?;
+
     let app = Router::new()
         .route("/health", get(health))
-        .route("/ingest", post(ingestion::ingest))
+        .route(
+            "/ingest",
+            post(ingestion::ingest).layer(middleware::from_fn_with_state(
+                ingest_token,
+                auth::require_ingest_token,
+            )),
+        )
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
