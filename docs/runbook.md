@@ -149,6 +149,12 @@ With traffic configured at 90% for `v012-pinned` and 10% for `v013`, 30 requests
 
 Both revisions served requests in this sample. The observed share can differ from the configured weight in a small sample. This checkpoint was recorded before promotion to 100%.
 
+After the canary check, Azure ingress routed 100% of main URL traffic to
+`oxidrop-dev--v013`. The main URL returned version `0.1.3`. The smoke test
+returned HTTP 200 for `/health`, 401 for `/ingest` without a token, and
+200 for `/ingest` with a valid token.
+
+
 ### Scale-to-zero observation
 
 One request after scale to zero took 57.1 seconds. Requests made immediately afterward were much faster.

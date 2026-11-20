@@ -32,14 +32,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
       ingress: {
         external: true
         targetPort: 8080
-        traffic: [
-          {
-            revisionName: 'oxidrop-dev--v012-pinned'
-            weight: 90
-          }
+        traffic: [          
           {
             revisionName: 'oxidrop-dev--v013'
-            weight: 10
+            weight: 100
           }
         ]
         allowInsecure: false
