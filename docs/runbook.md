@@ -136,7 +136,9 @@ The [GitHub Actions deployment](https://github.com/davidsellen/oxidrop/actions/r
 | `POST /ingest` without a token | `401` |
 | `POST /ingest` with a valid token | `200` |
 
-### Release 0.1.3 canary at 10%
+### Release 0.1.3 canary and promotion
+
+Git tag: [v0.1.3](https://github.com/davidsellen/oxidrop/tree/v0.1.3). The tag identifies the commit that records the validated deployment configuration.
 
 The direct check of `oxidrop-dev--v013` returned version `0.1.3`. An authenticated JSON array sent to `/ingest` returned `payloadType: array`, `stamp: batch-landed`, and `status: received`.
 
