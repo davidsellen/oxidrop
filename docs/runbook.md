@@ -61,3 +61,16 @@ The [GitHub Actions deployment](https://github.com/davidsellen/oxidrop/actions/r
 | `GET /health` | `200` |
 | `POST /ingest` without a token | `401` |
 | `POST /ingest` with a valid token | `200` |
+
+### Release 0.1.3 canary at 10%
+
+The direct check of `oxidrop-dev--v013` returned version `0.1.3`. An authenticated JSON array sent to `/ingest` returned `payloadType: array`, `stamp: batch-landed`, and `status: received`.
+
+With traffic configured at 90% for `v012-pinned` and 10% for `v013`, 30 requests to `/version` on the main app URL returned:
+
+| Version | Configured weight | Responses | Observed share |
+| --- | ---: | ---: | ---: |
+| `0.1.2` | 90% | 25 | 83.3% |
+| `0.1.3` | 10% | 5 | 16.7% |
+
+Both revisions served requests in this sample. The observed share can differ from the configured weight in a small sample. This checkpoint was recorded before promotion to 100%.
