@@ -74,3 +74,76 @@ With traffic configured at 90% for `v012-pinned` and 10% for `v013`, 30 requests
 | `0.1.3` | 10% | 5 | 16.7% |
 
 Both revisions served requests in this sample. The observed share can differ from the configured weight in a small sample. This checkpoint was recorded before promotion to 100%.
+
+
+## Test and promote a new revision
+
+Run these commands from the repository root on Fedora. Keep 100% of the
+main URL traffic on the stable revision while you test the new revision.
+
+### Test the new revision directly
+
+Set `revision` and `expected_version` for the release you are testing.
+This example uses `oxidrop-dev--v013` and `0.1.3`.
+
+```bash
+(
+  set -eo pipefail
+  source ./.env
+
+  revision='oxidrop-dev--v013'
+  expected_version='0.1.3'
+
+  host=$(az containerapp revision show \
+    --subscription "$OXIDROP_AZURE_SUBSCRIPTION" \
+    --resource-group rg-oxidrop-dev \
+    --name oxidrop-dev \
+    --revision "$revision" \
+    --query properties.fqdn \
+    --output tsv)
+  test -n "$host"
+  base_url="https://$host"
+
+  # Allow time for the revision to start if it scaled to zero.
+  curl -fsS --max-time 120 "$base_url/health"
+  printf '\n'
+
+  curl -fsS --max-time 120 "$base_url/version" |
+    jq -e --arg version "$expected_version" '.version == $version'
+
+  INGEST_TEST_TOKEN="${OXIDROP_DEPLOY_TOKEN:?Set the current Azure token in .env}" \
+    bash scripts/smoke-test.sh "$base_url"
+)
+```
+
+Expect `Healthy`, `true`, and HTTP statuses `200`, `401`, `200` from
+the smoke test. Stop if any check fails. Use the revision URL so a
+response from the stable revision cannot mask a failure.
+
+For release `0.1.3`, also verify the new behavior. An authenticated
+`POST /ingest` with `[{"temperature":-3}]` must return
+`"payloadType":"array"` and `"stamp":"batch-landed"`.
+
+### Route 10% to the new revision
+
+1. In `infra/main.bicep`, under `configuration.ingress.traffic`, set the
+   stable revision to weight `90` and the new revision to weight `10`.
+   Use explicit revision names.
+2. Run `bash scripts/deploy-dev.sh` and verify the proposed traffic change.
+   Apply it with `bash scripts/deploy-dev.sh deploy`.
+3. Check the applied weights in Azure **Revision management**. Call
+   `/version` on the main app URL several times. Both release versions
+   should appear over repeated requests. A small sample can differ from
+   the configured 90/10 split.
+4. Check the new revision's logs for failures. If the new revision fails
+   a functional check, follow **Roll back traffic**.
+
+### Promote to 100%
+
+1. In the same Bicep traffic block, keep only the new revision and set
+   its weight to `100`.
+2. Preview and apply with the same commands.
+3. Confirm the new revision has weight `100` in Azure. Run the smoke test
+   against the **main app URL** and verify `/version` returns the new version.
+4. Record the release version, image digest, revision name and test results
+   in **Lab evidence**.
