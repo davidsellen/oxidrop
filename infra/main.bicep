@@ -2,7 +2,7 @@ targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
 param appName string = 'oxidrop-dev'
-param containerImage string = 'ghcr.io/davidsellen/oxidrop:0.1.2'
+param containerImage string = 'ghcr.io/davidsellen/oxidrop@sha256:dc76bd954c1e09358941227f9a8e0b9893a3587e40c683bd06f746e881506919'
 
 @secure()
 param ingestToken string
@@ -82,7 +82,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           ]
         }
       ]
-      revisionSuffix: 'v012'
+      revisionSuffix: 'v012-pinned'
       scale: {
         minReplicas: 0
         maxReplicas: 1
