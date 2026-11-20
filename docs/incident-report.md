@@ -1,7 +1,7 @@
 # Incident report — incorrect readiness path
 
-**Status:** Draft for learner review  
-**Type:** Planned lab simulation  
+**Status:** Reviewed 
+**Type:** Completed
 **Date:** 19 November 2026
 
 ## Summary and impact
