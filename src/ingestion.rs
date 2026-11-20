@@ -11,6 +11,12 @@ pub async fn ingest(Json(payload): Json<Value>) -> Json<Value> {
         Value::Object(_) => "object",
     };
 
+    let stamp = match payload_type {
+        "object" => "crate-delivered",
+        "array" => "batch-landed",
+        _ => "tiny-drop",
+    };
+
     tracing::info!(payload_type, "JSON payload received");
 
     tracing::debug!(
@@ -20,6 +26,7 @@ pub async fn ingest(Json(payload): Json<Value>) -> Json<Value> {
 
     Json(json!({
         "status": "received",
-        "payloadType": payload_type
+        "payloadType": payload_type,
+        "stamp": stamp
     }))
 }
