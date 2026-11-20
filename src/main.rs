@@ -1,5 +1,5 @@
 use axum::{
-    Router, Json, middleware,
+    Json, Router, middleware,
     routing::{get, post},
 };
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
