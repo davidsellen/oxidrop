@@ -22,5 +22,28 @@ assert_status() {
 
 assert_status 200 "$base_url/health"
 assert_status 401 "$base_url/ingest" --json "$payload"
-assert_status 200 "$base_url/ingest" --json "$payload" \
-  --header "Authorization: Bearer $token"
+
+response_file=$(mktemp)
+trap 'rm -f -- "$response_file"' EXIT
+
+status=$(printf 'header = "Authorization: Bearer %s"\n' "$token" |
+  curl --config - --silent --show-error --max-time 5 \
+    --output "$response_file" --write-out '%{http_code}' \
+    --json '[{"temperature":-3},{"temperature":-5}]' \
+    "$base_url/ingest")
+
+if [[ "$status" != 200 ]]; then
+  printf 'Expected HTTP 200, got %s\n' "$status" >&2
+  exit 1
+fi
+
+if ! jq -e '
+  .status == "received" and
+  .payloadType == "array" and
+  .stamp == "batch-landed"
+' "$response_file" > /dev/null; then
+  echo "Expected an array receipt with stamp batch-landed." >&2
+  exit 1
+fi
+
+echo "PASS: HTTP 200 with batch-landed stamp"
