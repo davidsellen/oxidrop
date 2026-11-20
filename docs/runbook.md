@@ -4,13 +4,28 @@
 
 Azure Container Apps pulls the image from GHCR. Bicep declares the development environment, its Container App, ingress, traffic weights, readiness probe and replica limits. The lab permits scale to zero. Allow extra time for the first request after scale to zero.
 
-The GitHub Actions CI workflow runs on demand in the lab. Images are published from Fedora. The dev deployment can run from Fedora or through the manual GitHub Actions workflow. See the [course project criteria](https://kursrum-devops.pages.dev/examinering/projektarbetet/) before submission. They describe a pipeline that calls scripts and a container image stored in an Azure registry.
+The GitHub Actions CI workflow runs on demand in the lab. Container images can be published to GHCR through the manual GitHub Actions workflow. The dev deployment can run from Fedora or through the manual GitHub Actions workflow. See the [course project criteria](https://kursrum-devops.pages.dev/examinering/projektarbetet/) before submission. They describe a pipeline that calls scripts and a container image stored in an Azure registry.
+
+## Publish a new container image
+
+1. Update `[package].version` in `Cargo.toml` to an unused `MAJOR.MINOR.PATCH` version. Run `cargo check` to check the build and update `Cargo.lock`. Commit the release changes and push them to `main`.
+2. Start [Publish Oxidrop image](../.github/workflows/publish-image.yml) manually:
+
+   ```bash
+   gh workflow run publish-image.yml --ref main
+   ```
+
+   The workflow reads `Cargo.toml` from the checked-out commit and signs in to GHCR with the workflow's `GITHUB_TOKEN`. It checks whether the version tag exists before building. If the tag exists, the workflow stops. If the registry check fails for another reason, inspect the job log before retrying.
+3. Open **Actions → Publish Oxidrop image → the successful run → Summary**. Copy the full `ghcr.io/davidsellen/oxidrop@sha256:…` reference. The version tag names the release. The digest pins the exact image published by the build.
+4. Set `containerImage` to that reference in `infra/dev.bicepparam` and choose a new `revisionSuffix`. Keep traffic on the stable revision while you deploy and test the new one. Follow [Deploy to development](#deploy-to-development), then [Test and promote a new revision](#test-and-promote-a-new-revision).
+
+This workflow publishes a `linux/amd64` image and has a five-minute job timeout. Azure deployment and traffic promotion are separate steps.
 
 ## Deploy to development
 
 1. Confirm Docker and Azure CLI access, and sign in to the intended Azure subscription.
 2. Set `OXIDROP_AZURE_SUBSCRIPTION` and `OXIDROP_DEPLOY_TOKEN` in a local, ignored `.env`. Run `git check-ignore .env`. Keep the token out of Git and command output.
-3. Build and publish the intended image tag. Confirm that the image is available to Azure. Set `containerImage` to its registry digest and choose a fresh `revisionSuffix` in `infra/dev.bicepparam` when the revision template changes.
+3. For a new release, follow [Publish a new container image](#publish-a-new-container-image) to set the image digest and revision suffix. For a change to an existing release, review the values already in `infra/dev.bicepparam`.
 4. From the repository root, preview the deployment:
 
    ```bash
