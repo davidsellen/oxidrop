@@ -1,17 +1,36 @@
-name: Azure OIDC check
+name: Oxidrop Azure deployment
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Preview or apply the Bicep deployment
+        type: choice
+        required: true
+        default: what-if
+        options:
+          - what-if
+          - deploy
 
 permissions:
+  contents: read
   id-token: write
 
+concurrency:
+  group: oxidrop-azure-deployment
+  cancel-in-progress: false
+
 jobs:
-  check-azure:
+  deploy-dev:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
       - name: Sign in to Azure
         uses: azure/login@v2
         with:
@@ -19,5 +38,9 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Verify resource group access
-        run: az group show --name rg-oxidrop-dev --query name --output tsv
+      - name: Run deployment script
+        env:
+          DEPLOY_MODE: ${{ inputs.mode }}
+          OXIDROP_AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          OXIDROP_DEPLOY_TOKEN: ${{ secrets.OXIDROP_DEPLOY_TOKEN }}
+        run: bash scripts/deploy-dev.sh "$DEPLOY_MODE"
