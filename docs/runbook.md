@@ -4,12 +4,12 @@
 
 Azure Container Apps pulls the image from GHCR. Bicep declares the development environment, its Container App, ingress, traffic weights, readiness probe and replica limits. The lab permits scale to zero. Allow extra time for the first request after scale to zero.
 
-The GitHub Actions CI workflow runs on demand in the lab. Container images can be published to GHCR through GitHub Actions. The dev deployment can run from Fedora or through the manual GitHub Actions workflow. See the [course project criteria](https://kursrum-devops.pages.dev/examinering/projektarbetet/) before submission. They describe a pipeline that calls scripts and a container image stored in an Azure registry.
+The GitHub Actions CI workflow runs on demand in the lab. Container images can be published to GHCR through the manual GitHub Actions workflow. The dev deployment can run from Fedora or through the manual GitHub Actions workflow. See the [course project criteria](https://kursrum-devops.pages.dev/examinering/projektarbetet/) before submission. They describe a pipeline that calls scripts and a container image stored in an Azure registry.
 
 ## Publish a new container image
 
 1. Update `[package].version` in `Cargo.toml` to an unused `MAJOR.MINOR.PATCH` version. Run `cargo check` to check the build and update `Cargo.lock`. Commit the release changes and push them to `main`.
-2. A push to `main` that changes `Cargo.toml` starts [Publish Oxidrop image](../.github/workflows/publish-image.yml). The workflow skips the build and push if the package version stayed the same. To publish a version already committed before the automatic trigger was enabled, or to retry a version whose image was not published, start it manually:
+2. Start [Publish Oxidrop image](../.github/workflows/publish-image.yml) manually:
 
    ```bash
    gh workflow run publish-image.yml --ref main
