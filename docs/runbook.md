@@ -51,3 +51,13 @@ oxidrop-dev--v012         Healthy   0          /health
 ```
 
 The learner subsequently reported completing promotion of `v012`. The table above captures the rollback checkpoint.
+
+### GitHub Actions deployment and smoke test
+
+The [GitHub Actions deployment](https://github.com/davidsellen/oxidrop/actions/runs/44746242532) applied the Bicep template to `rg-oxidrop-dev` and passed the post-deployment smoke test.
+
+| Check | HTTP status |
+| --- | --- |
+| `GET /health` | `200` |
+| `POST /ingest` without a token | `401` |
+| `POST /ingest` with a valid token | `200` |
