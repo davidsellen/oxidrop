@@ -34,7 +34,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 8080
         traffic: [          
           {
-            revisionName: 'oxidrop-dev--v013'
+            revisionName: 'oxidrop-dev--v014'
             weight: 100
           }
         ]
